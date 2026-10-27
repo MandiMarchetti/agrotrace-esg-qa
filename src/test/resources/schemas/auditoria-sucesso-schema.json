@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Contrato de Auditoria ESG Aprovada",
+  "type": "object",
+  "required": [
+    "idAuditoria",
+    "codigoCar",
+    "statusConformidade",
+    "seloVerde",
+    "mensagem",
+    "dataAuditoria"
+  ],
+  "properties": {
+    "idAuditoria": {
+      "type": "string",
+      "minLength": 5
+    },
+    "codigoCar": {
+      "type": "string",
+      "minLength": 10
+    },
+    "statusConformidade": {
+      "type": "string",
+      "enum": ["APROVADO_EXPORTACAO", "REPROVADO", "PENDENTE_DADOS"]
+    },
+    "seloVerde": {
+      "type": "boolean"
+    },
+    "mensagem": {
+      "type": "string"
+    },
+    "dataAuditoria": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,9 @@
+services:
+  agrotrace-api-mock:
+    image: wiremock/wiremock:3.3.1
+    container_name: agrotrace-api
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./wiremock:/home/wiremock
+    command: ["--global-response-templating", "--verbose"]

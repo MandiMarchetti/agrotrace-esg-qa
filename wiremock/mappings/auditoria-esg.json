@@ -1,0 +1,85 @@
+{
+  "mappings": [
+    {
+      "priority": 1,
+      "request": {
+        "method": "POST",
+        "url": "/api/v1/lotes/auditoria",
+        "bodyPatterns": [
+          { "matchesJsonPath": "$[?(@.focosQueimadaRecentes == 0)]" },
+          { "matchesJsonPath": "$[?(@.regularidadeTrabalhista == true)]" },
+          { "matchesJsonPath": "$[?(@.codigoCar != '')]" }
+        ]
+      },
+      "response": {
+        "status": 201,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "idAuditoria": "AUD-2026-99812",
+          "codigoCar": "{{jsonPath request.body '$.codigoCar'}}",
+          "statusConformidade": "APROVADO_EXPORTACAO",
+          "seloVerde": true,
+          "mensagem": "Lote em total conformidade com os critérios ESG ambientais e trabalhistas.",
+          "dataAuditoria": "2026-10-23T10:30:00Z"
+        }
+      }
+    },
+    {
+      "priority": 2,
+      "request": {
+        "method": "POST",
+        "url": "/api/v1/lotes/auditoria",
+        "bodyPatterns": [
+          { "matchesJsonPath": "$[?(@.focosQueimadaRecentes > 0)]" }
+        ]
+      },
+      "response": {
+        "status": 422,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "erro": "VIOLACAO_AMBIENTAL",
+          "mensagem": "Lote reprovado: Detectados focos de queimada recentes na propriedade.",
+          "statusConformidade": "REPROVADO"
+        }
+      }
+    },
+    {
+      "priority": 3,
+      "request": {
+        "method": "POST",
+        "url": "/api/v1/lotes/auditoria",
+        "bodyPatterns": [
+          { "matchesJsonPath": "$[?(@.codigoCar == '' || @.codigoCar == null)]" }
+        ]
+      },
+      "response": {
+        "status": 400,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "erro": "DADOS_INVALIDOS",
+          "mensagem": "O código do Cadastro Ambiental Rural (CAR) é obrigatório para governança.",
+          "statusConformidade": "PENDENTE_DADOS"
+        }
+      }
+    },
+    {
+      "priority": 1,
+      "request": {
+        "method": "GET",
+        "url": "/api/v1/lotes/auditoria/AUD-2026-99812"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "idAuditoria": "AUD-2026-99812",
+          "codigoCar": "MT-5107925-78945612301234567890123456789012",
+          "statusConformidade": "APROVADO_EXPORTACAO",
+          "seloVerde": true,
+          "mensagem": "Lote em total conformidade com os critérios ESG ambientais e trabalhistas.",
+          "dataAuditoria": "2026-10-23T10:30:00Z"
+        }
+      }
+    }
+  ]
+}

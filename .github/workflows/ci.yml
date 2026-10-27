@@ -1,0 +1,38 @@
+name: AgroTrace ESG - QA Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  api-bdd-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout do Código Fonte
+        uses: actions/checkout@v4
+
+      - name: 2. Configurar JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: 3. Subir API AgroTrace ESG (Docker WireMock na Nuvem)
+        run: |
+          docker compose up -d
+          sleep 5
+          curl --retry 5 --retry-connrefused http://localhost:8080/__admin
+
+      - name: 4. Executar Testes Automatizados (Maven + Cucumber)
+        run: mvn clean test
+
+      - name: 5. Publicar Relatório HTML do Cucumber como Artefato
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cucumber-html-report
+          path: target/cucumber-reports.html
