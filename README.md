@@ -22,6 +22,21 @@ O **AgroTrace ESG** é uma API de Auditoria e Rastreabilidade Socioambiental de 
 
 ---
 
+## ⚠️ Premissas e Limitações
+
+* **API virtualizada:** a API AgroTrace ESG é simulada com **WireMock** (Docker ou embutido). Não há um backend Spring/C# real nesta entrega: os testes validam o **contrato e as regras ESG especificadas nos mapeamentos** (`wiremock/mappings/auditoria-esg.json`), cobrindo os 2 endpoints existentes (`POST` e `GET`).
+* **Apontar para uma API real:** os mesmos cenários podem rodar contra outra implementação que respeite esse contrato, sem alterar os testes. Basta informar a URL base:
+
+  ```bash
+  mvn clean test -Dapi.base.url=http://localhost:8081
+  ```
+
+  (Validado: com essa propriedade, as requisições vão para o endereço informado em vez da porta `8080`.)
+* **Dados fixos no mock:** o `idAuditoria` e a `dataAuditoria` retornados são constantes. Por isso o teste **não** consegue provar a unicidade do identificador de auditoria (hash único) citada no pilar de Governança; isso só seria verificável numa API real.
+* **Porta 8080:** se já houver algo escutando na `8080`, o `TestRunner` assume que é a API e não sobe o WireMock embutido.
+
+---
+
 ## 🛠️ Tecnologias e Ferramentas Utilizadas
 
 * **Java 17** – Linguagem base de desenvolvimento.
@@ -64,7 +79,8 @@ agrotrace-esg-qa/
 ├── wiremock/
 │   └── mappings/
 │       └── auditoria-esg.json                 # Endpoints e regras mockadas da API ESG
-├── docker-compose.yml                         # Container Docker da API (WireMock)
+├── Dockerfile                                 # Imagem Docker da API (WireMock + mapeamentos embutidos)
+├── docker-compose.yml                         # Sobe o container da API na porta 8080
 └── pom.xml                                    # Dependências do projeto Maven
 ```
 
@@ -101,11 +117,19 @@ mvn test -Dcucumber.filter.tags="@smoke"
 ```
 
 ### Opção 2: Subindo a API via Docker Compose (Opcional)
-Caso deseje subir o container Docker manualmente antes de rodar os testes:
+Caso deseje subir o container Docker manualmente antes de rodar os testes (o `Dockerfile` constrói a imagem da API com os mapeamentos do WireMock embutidos):
 
 ```bash
-docker compose up -d
+docker compose up -d --build
 mvn clean test
+docker compose down
+```
+
+Para construir e executar apenas a imagem, sem o Compose:
+
+```bash
+docker build -t agrotrace-esg-api .
+docker run --rm -p 8080:8080 agrotrace-esg-api
 ```
 
 ---
@@ -127,7 +151,7 @@ O projeto conta com um pipeline de Integração Contínua configurado no arquivo
 
 1. **Checkout do Código Fonte** (`actions/checkout@v4`);
 2. **Configuração do Ambiente Java 17** (`actions/setup-java@v4` - distribuição Temurin com cache Maven);
-3. **Subida da API em Container Docker** (`docker compose up -d` disponibilizando os endpoints na porta `8080`);
+3. **Subida da API em Container Docker** (`docker compose up -d`, que constrói a imagem do `Dockerfile` e disponibiliza os endpoints na porta `8080`);
 4. **Execução da Suíte de Testes** (`mvn clean test`);
 5. **Publicação de Artefatos** (`actions/upload-artifact@v4` disponibilizando o relatório `cucumber-reports.html` para download direto na aba *Actions* do GitHub).
 
