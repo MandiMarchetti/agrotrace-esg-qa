@@ -17,8 +17,23 @@ O **AgroTrace ESG** é uma API de Auditoria e Rastreabilidade Socioambiental de 
 | Pilar ESG | Regra de Negócio Validada na API |
 | :--- | :--- |
 | **🌍 E (Ambiental)** | Verifica se a propriedade rural possui **zero focos de queimada recentes** (`focosQueimadaRecentes == 0`). Lotes oriundos de áreas com queimadas recebem bloqueio imediato (`HTTP 422`). |
-| **🤝 S (Social)** | Valida a certidão de **regularidade trabalhista** (`regularidadeTrabalhista == true`), impedindo a comercialização de lotes ligados a trabalho irregular. |
+| **🤝 S (Social)** | Valida a certidão de **regularidade trabalhista** (`regularidadeTrabalhista == true`), impedindo a comercialização de lotes ligados a trabalho irregular (`HTTP 422`, erro `VIOLACAO_SOCIAL`). |
 | **⚖️ G (Governança)** | Exige o código válido do **Cadastro Ambiental Rural (CAR)** (`codigoCar`) como chave obrigatória de rastreabilidade (`HTTP 400` caso ausente) e emite um hash único (`idAuditoria`) para auditoria pública. |
+
+---
+
+## ⚠️ Premissas e Limitações
+
+* **API virtualizada:** a API AgroTrace ESG é simulada com **WireMock** (Docker ou embutido). Não há um backend Spring/C# real nesta entrega: os testes validam o **contrato e as regras ESG especificadas nos mapeamentos** (`wiremock/mappings/auditoria-esg.json`), cobrindo os 2 endpoints existentes (`POST` e `GET`).
+* **Apontar para uma API real:** os mesmos cenários podem rodar contra outra implementação que respeite esse contrato, sem alterar os testes. Basta informar a URL base:
+
+  ```bash
+  mvn clean test -Dapi.base.url=http://localhost:8081
+  ```
+
+  (Validado: com essa propriedade, as requisições vão para o endereço informado em vez da porta `8080`.)
+* **Dados fixos no mock:** o `idAuditoria` e a `dataAuditoria` retornados são constantes. Por isso o teste **não** consegue provar a unicidade do identificador de auditoria (hash único) citada no pilar de Governança; isso só seria verificável numa API real.
+* **Porta 8080:** se já houver algo escutando na `8080`, o `TestRunner` assume que é a API e não sobe o WireMock embutido.
 
 ---
 
@@ -57,11 +72,15 @@ agrotrace-esg-qa/
 │           ├── features/
 │           │   └── AuditoriaLoteEsg.feature   # Cenários BDD em Português
 │           └── schemas/
-│               └── auditoria-sucesso-schema.json # Contrato JSON Schema da API
+│               ├── auditoria-sucesso-schema.json # Contrato JSON Schema das respostas de sucesso
+│               └── auditoria-erro-schema.json    # Contrato JSON Schema das respostas de erro (400/404/422)
+├── docs/
+│   └── Documentação tecnica - AgroTrace ESG.docx  # Documentação técnica com cenários e evidências de execução
 ├── wiremock/
 │   └── mappings/
 │       └── auditoria-esg.json                 # Endpoints e regras mockadas da API ESG
-├── docker-compose.yml                         # Container Docker da API (WireMock)
+├── Dockerfile                                 # Imagem Docker da API (WireMock + mapeamentos embutidos)
+├── docker-compose.yml                         # Sobe o container da API na porta 8080
 └── pom.xml                                    # Dependências do projeto Maven
 ```
 
@@ -76,7 +95,9 @@ Os cenários estão especificados em Gherkin no arquivo `src/test/resources/feat
 | `@caminhoFeliz` `@contrato` | Registrar lote agrícola em total conformidade ESG com sucesso e validar contrato JSON Schema | `POST /api/v1/lotes/auditoria` | `201 Created` |
 | `@negativo` `@ambiental` | Reprovar auditoria de lote oriundo de propriedade com focos de queimada recentes | `POST /api/v1/lotes/auditoria` | `422 Unprocessable Entity` |
 | `@negativo` `@governanca` | Impedir registro de auditoria sem código do Cadastro Ambiental Rural (CAR) | `POST /api/v1/lotes/auditoria` | `400 Bad Request` |
-| `@smoke` `@auditoriaConsulta` | Consultar certificado de auditoria ESG previamente aprovado por ID | `GET /api/v1/lotes/auditoria/{id}` | `200 OK` |
+| `@negativo` `@social` | Reprovar auditoria de lote oriundo de propriedade sem regularidade trabalhista | `POST /api/v1/lotes/auditoria` | `422 Unprocessable Entity` |
+| `@smoke` `@auditoriaConsulta` | Consultar certificado de auditoria ESG previamente aprovado por ID (valida corpo e contrato) | `GET /api/v1/lotes/auditoria/{id}` | `200 OK` |
+| `@negativo` `@auditoriaConsulta` | Consultar auditoria ESG com ID inexistente | `GET /api/v1/lotes/auditoria/{id}` | `404 Not Found` |
 
 ---
 
@@ -96,11 +117,19 @@ mvn test -Dcucumber.filter.tags="@smoke"
 ```
 
 ### Opção 2: Subindo a API via Docker Compose (Opcional)
-Caso deseje subir o container Docker manualmente antes de rodar os testes:
+Caso deseje subir o container Docker manualmente antes de rodar os testes (o `Dockerfile` constrói a imagem da API com os mapeamentos do WireMock embutidos):
 
 ```bash
-docker compose up -d
+docker compose up -d --build
 mvn clean test
+docker compose down
+```
+
+Para construir e executar apenas a imagem, sem o Compose:
+
+```bash
+docker build -t agrotrace-esg-api .
+docker run --rm -p 8080:8080 agrotrace-esg-api
 ```
 
 ---
@@ -122,7 +151,7 @@ O projeto conta com um pipeline de Integração Contínua configurado no arquivo
 
 1. **Checkout do Código Fonte** (`actions/checkout@v4`);
 2. **Configuração do Ambiente Java 17** (`actions/setup-java@v4` - distribuição Temurin com cache Maven);
-3. **Subida da API em Container Docker** (`docker compose up -d` disponibilizando os endpoints na porta `8080`);
+3. **Subida da API em Container Docker** (`docker compose up -d`, que constrói a imagem do `Dockerfile` e disponibiliza os endpoints na porta `8080`);
 4. **Execução da Suíte de Testes** (`mvn clean test`);
 5. **Publicação de Artefatos** (`actions/upload-artifact@v4` disponibilizando o relatório `cucumber-reports.html` para download direto na aba *Actions* do GitHub).
 

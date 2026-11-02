@@ -21,10 +21,11 @@
     },
     "statusConformidade": {
       "type": "string",
-      "enum": ["APROVADO_EXPORTACAO", "REPROVADO", "PENDENTE_DADOS"]
+      "enum": ["APROVADO_EXPORTACAO"]
     },
     "seloVerde": {
-      "type": "boolean"
+      "type": "boolean",
+      "const": true
     },
     "mensagem": {
       "type": "string"
