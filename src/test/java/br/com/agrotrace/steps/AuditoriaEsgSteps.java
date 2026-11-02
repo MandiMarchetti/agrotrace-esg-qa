@@ -44,6 +44,11 @@ public class AuditoriaEsgSteps {
         Assert.assertEquals(Boolean.parseBoolean(seloVerdeEsperado), seloAtual);
     }
 
+    @E("o corpo da resposta deve conter o id de auditoria {string}")
+    public void oCorpoDaRespostaDeveConterOIdDeAuditoria(String idEsperado) {
+        Assert.assertEquals(idEsperado, auditoriaService.response.jsonPath().getString("idAuditoria"));
+    }
+
     @E("a resposta deve respeitar o contrato JSON Schema {string}")
     public void aRespostaDeveRespeitarOContratoJsonSchema(String schemaFileName) {
         auditoriaService.validarContratoJsonSchema(schemaFileName);

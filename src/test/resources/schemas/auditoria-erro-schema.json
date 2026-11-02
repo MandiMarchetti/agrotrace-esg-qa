@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Contrato de Erro da API AgroTrace ESG",
+  "type": "object",
+  "required": ["erro", "mensagem"],
+  "properties": {
+    "erro": {
+      "type": "string",
+      "enum": ["VIOLACAO_AMBIENTAL", "VIOLACAO_SOCIAL", "DADOS_INVALIDOS", "AUDITORIA_NAO_ENCONTRADA"]
+    },
+    "mensagem": {
+      "type": "string",
+      "minLength": 5
+    },
+    "statusConformidade": {
+      "type": "string",
+      "enum": ["REPROVADO", "PENDENTE_DADOS"]
+    }
+  },
+  "additionalProperties": false
+}

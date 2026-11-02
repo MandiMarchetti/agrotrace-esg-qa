@@ -6,14 +6,22 @@
         "method": "POST",
         "url": "/api/v1/lotes/auditoria",
         "bodyPatterns": [
-          { "matchesJsonPath": "$[?(@.focosQueimadaRecentes == 0)]" },
-          { "matchesJsonPath": "$[?(@.regularidadeTrabalhista == true)]" },
-          { "matchesJsonPath": "$[?(@.codigoCar != '')]" }
+          {
+            "matchesJsonPath": "$[?(@.focosQueimadaRecentes == 0)]"
+          },
+          {
+            "matchesJsonPath": "$[?(@.regularidadeTrabalhista == true)]"
+          },
+          {
+            "matchesJsonPath": "$[?(@.codigoCar != '')]"
+          }
         ]
       },
       "response": {
         "status": 201,
-        "headers": { "Content-Type": "application/json" },
+        "headers": {
+          "Content-Type": "application/json"
+        },
         "jsonBody": {
           "idAuditoria": "AUD-2026-99812",
           "codigoCar": "{{jsonPath request.body '$.codigoCar'}}",
@@ -30,16 +38,43 @@
         "method": "POST",
         "url": "/api/v1/lotes/auditoria",
         "bodyPatterns": [
-          { "matchesJsonPath": "$[?(@.focosQueimadaRecentes > 0)]" }
+          {
+            "matchesJsonPath": "$[?(@.focosQueimadaRecentes > 0)]"
+          }
         ]
       },
       "response": {
         "status": 422,
-        "headers": { "Content-Type": "application/json" },
+        "headers": {
+          "Content-Type": "application/json"
+        },
         "jsonBody": {
           "erro": "VIOLACAO_AMBIENTAL",
           "mensagem": "Lote reprovado: Detectados focos de queimada recentes na propriedade.",
           "statusConformidade": "REPROVADO"
+        }
+      }
+    },
+    {
+      "priority": 4,
+      "request": {
+        "method": "POST",
+        "url": "/api/v1/lotes/auditoria",
+        "bodyPatterns": [
+          {
+            "matchesJsonPath": "$[?(@.codigoCar == '' || @.codigoCar == null)]"
+          }
+        ]
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "erro": "DADOS_INVALIDOS",
+          "mensagem": "O código do Cadastro Ambiental Rural (CAR) é obrigatório para governança.",
+          "statusConformidade": "PENDENTE_DADOS"
         }
       }
     },
@@ -49,16 +84,20 @@
         "method": "POST",
         "url": "/api/v1/lotes/auditoria",
         "bodyPatterns": [
-          { "matchesJsonPath": "$[?(@.codigoCar == '' || @.codigoCar == null)]" }
+          {
+            "matchesJsonPath": "$[?(@.regularidadeTrabalhista == false)]"
+          }
         ]
       },
       "response": {
-        "status": 400,
-        "headers": { "Content-Type": "application/json" },
+        "status": 422,
+        "headers": {
+          "Content-Type": "application/json"
+        },
         "jsonBody": {
-          "erro": "DADOS_INVALIDOS",
-          "mensagem": "O código do Cadastro Ambiental Rural (CAR) é obrigatório para governança.",
-          "statusConformidade": "PENDENTE_DADOS"
+          "erro": "VIOLACAO_SOCIAL",
+          "mensagem": "Lote reprovado: Propriedade sem regularidade trabalhista comprovada.",
+          "statusConformidade": "REPROVADO"
         }
       }
     },
@@ -70,7 +109,9 @@
       },
       "response": {
         "status": 200,
-        "headers": { "Content-Type": "application/json" },
+        "headers": {
+          "Content-Type": "application/json"
+        },
         "jsonBody": {
           "idAuditoria": "AUD-2026-99812",
           "codigoCar": "MT-5107925-78945612301234567890123456789012",
@@ -78,6 +119,23 @@
           "seloVerde": true,
           "mensagem": "Lote em total conformidade com os critérios ESG ambientais e trabalhistas.",
           "dataAuditoria": "2026-10-23T10:30:00Z"
+        }
+      }
+    },
+    {
+      "priority": 5,
+      "request": {
+        "method": "GET",
+        "urlPattern": "/api/v1/lotes/auditoria/.*"
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "erro": "AUDITORIA_NAO_ENCONTRADA",
+          "mensagem": "Nenhuma auditoria encontrada para o ID informado."
         }
       }
     }

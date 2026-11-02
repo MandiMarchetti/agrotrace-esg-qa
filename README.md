@@ -17,7 +17,7 @@ O **AgroTrace ESG** é uma API de Auditoria e Rastreabilidade Socioambiental de 
 | Pilar ESG | Regra de Negócio Validada na API |
 | :--- | :--- |
 | **🌍 E (Ambiental)** | Verifica se a propriedade rural possui **zero focos de queimada recentes** (`focosQueimadaRecentes == 0`). Lotes oriundos de áreas com queimadas recebem bloqueio imediato (`HTTP 422`). |
-| **🤝 S (Social)** | Valida a certidão de **regularidade trabalhista** (`regularidadeTrabalhista == true`), impedindo a comercialização de lotes ligados a trabalho irregular. |
+| **🤝 S (Social)** | Valida a certidão de **regularidade trabalhista** (`regularidadeTrabalhista == true`), impedindo a comercialização de lotes ligados a trabalho irregular (`HTTP 422`, erro `VIOLACAO_SOCIAL`). |
 | **⚖️ G (Governança)** | Exige o código válido do **Cadastro Ambiental Rural (CAR)** (`codigoCar`) como chave obrigatória de rastreabilidade (`HTTP 400` caso ausente) e emite um hash único (`idAuditoria`) para auditoria pública. |
 
 ---
@@ -57,7 +57,10 @@ agrotrace-esg-qa/
 │           ├── features/
 │           │   └── AuditoriaLoteEsg.feature   # Cenários BDD em Português
 │           └── schemas/
-│               └── auditoria-sucesso-schema.json # Contrato JSON Schema da API
+│               ├── auditoria-sucesso-schema.json # Contrato JSON Schema das respostas de sucesso
+│               └── auditoria-erro-schema.json    # Contrato JSON Schema das respostas de erro (400/404/422)
+├── docs/
+│   └── Documentação tecnica - AgroTrace ESG.docx  # Documentação técnica com cenários e evidências de execução
 ├── wiremock/
 │   └── mappings/
 │       └── auditoria-esg.json                 # Endpoints e regras mockadas da API ESG
@@ -76,7 +79,9 @@ Os cenários estão especificados em Gherkin no arquivo `src/test/resources/feat
 | `@caminhoFeliz` `@contrato` | Registrar lote agrícola em total conformidade ESG com sucesso e validar contrato JSON Schema | `POST /api/v1/lotes/auditoria` | `201 Created` |
 | `@negativo` `@ambiental` | Reprovar auditoria de lote oriundo de propriedade com focos de queimada recentes | `POST /api/v1/lotes/auditoria` | `422 Unprocessable Entity` |
 | `@negativo` `@governanca` | Impedir registro de auditoria sem código do Cadastro Ambiental Rural (CAR) | `POST /api/v1/lotes/auditoria` | `400 Bad Request` |
-| `@smoke` `@auditoriaConsulta` | Consultar certificado de auditoria ESG previamente aprovado por ID | `GET /api/v1/lotes/auditoria/{id}` | `200 OK` |
+| `@negativo` `@social` | Reprovar auditoria de lote oriundo de propriedade sem regularidade trabalhista | `POST /api/v1/lotes/auditoria` | `422 Unprocessable Entity` |
+| `@smoke` `@auditoriaConsulta` | Consultar certificado de auditoria ESG previamente aprovado por ID (valida corpo e contrato) | `GET /api/v1/lotes/auditoria/{id}` | `200 OK` |
+| `@negativo` `@auditoriaConsulta` | Consultar auditoria ESG com ID inexistente | `GET /api/v1/lotes/auditoria/{id}` | `404 Not Found` |
 
 ---
 
