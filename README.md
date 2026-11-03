@@ -157,4 +157,4 @@ O projeto conta com um pipeline de Integração Contínua configurado no arquivo
 
 ---
 
-👩‍💻 **Desenvolvido por:** Amanda Souza/ Deryck De Lucca/ Iago Dantas/ Daniel Vilela – FIAP 2026
+👩‍💻 **Desenvolvido por:** Amanda Thomaz de Souza/ Deryck De Lucca/ Iago Dantas/ Daniel Vilela – FIAP 2026
