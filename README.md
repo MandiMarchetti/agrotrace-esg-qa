@@ -75,7 +75,8 @@ agrotrace-esg-qa/
 │               ├── auditoria-sucesso-schema.json # Contrato JSON Schema das respostas de sucesso
 │               └── auditoria-erro-schema.json    # Contrato JSON Schema das respostas de erro (400/404/422)
 ├── docs/
-│   └── Documentação tecnica - AgroTrace ESG.docx  # Documentação técnica com cenários e evidências de execução
+│   ├── Documentação tecnica - AgroTrace ESG.docx  # Documentação técnica com cenários e evidências de execução
+│   └── report html completo II.pdf                # Relatório Cucumber completo (6 cenários aprovados)
 ├── wiremock/
 │   └── mappings/
 │       └── auditoria-esg.json                 # Endpoints e regras mockadas da API ESG
